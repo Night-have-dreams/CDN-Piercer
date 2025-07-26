@@ -59,13 +59,13 @@ def get_valid_api_key_and_credits():
 def parse_args():
     parser = argparse.ArgumentParser(description="CDNsearch v1.0")
     group = parser.add_mutually_exclusive_group()
-    group.add_argument('-u', metavar='URL', help='分析網址')
-    group.add_argument('-f', metavar='ICON_FILE', help='使用本機 icon ')
+    group.add_argument('-u', metavar='URL', help='目標網址或域名')
+    group.add_argument('-f', metavar='ICON_FILE', help='使用本機 icon 檔案')
     group.add_argument('-hash', metavar='HASH', help='直接使用 hash 查詢')
-    parser.add_argument('-dns', metavar='DOMAIN_OR_off', help='DNS 查詢或 off 跳過')
+    parser.add_argument('-dns', metavar='DOMAIN_OR_off', help='DNS 查詢或使用 -dns off 跳過 DNS 查詢')
     parser.add_argument('--no-query', action='store_true', help='只計算 hash，不查 Shodan')
-    parser.add_argument('-q','--query', metavar='SHODAN_Q', help='額外 Shodan 查詢條件')
-    parser.add_argument('-report', action='store_true', help='歷史報告模式')
+    parser.add_argument('-q','--query', metavar='SHODAN_Q', help='額外 Shodan 查詢條件，例如 -q \'port:80 title:test\'')
+    parser.add_argument('-report', action='store_true', help='歷史報告模式(未實裝)')
     parser.add_argument('-batch', action='store_true', help='批次模式，不互動')
     return parser.parse_args()
 
@@ -91,7 +91,7 @@ def main():
         return info['query_credits'] if isinstance(info, dict) else None
 
     if args.report:
-        print("[REPORT] 查詢報告模式"); # info_report.show_report()TODO
+        print("[REPORT] 查詢報告模式 (尚未實裝)"); # info_report.show_report()TODO
         sys.exit(0)
 
     if args.dns and args.dns.lower() != 'off':

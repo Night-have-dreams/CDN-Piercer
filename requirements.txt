@@ -1,0 +1,4 @@
+requests>=2.25.0
+dnspython>=2.0.0
+mmh3>=3.0.0
+shodan>=1.30.0
