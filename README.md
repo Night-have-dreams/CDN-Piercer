@@ -88,6 +88,7 @@ python main.py -u https://example.com --no-query
 
 ## 注意事項
 
-- log 檔與查詢結果會儲存在 `logs/` 目錄下，請勿將 logs 目錄推送到 git。
 - 推薦先檢查 `requirements.txt` 內依賴項版本，避免與其他安全工具衝突。
 - 使用 Shodan 前請先申請並設定有效的 API Key。
+- 查詢可能消耗 Shodan credits，請自行管理帳號餘額。
+- 適用於安全研究及紅隊合法合規用途，請勿用於未授權滲透。
