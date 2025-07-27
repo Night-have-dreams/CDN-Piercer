@@ -33,19 +33,20 @@ def print_banner():
 """)
 
 def shodan_info_cli():
+    """
+    測試 shodan CLI 是否可用並回傳剩餘 credits。
+    """
     try:
         proc = subprocess.run(['shodan', 'info'], stdout=subprocess.PIPE, stderr=subprocess.PIPE, encoding='utf-8', timeout=10)
-        output = proc.stdout + proc.stderr
         if proc.returncode != 0:
-            raise Exception(f"CLI error: {output.strip()}")
-        for line in output.splitlines():
+            return None
+        for line in proc.stdout.splitlines():
             if 'Query credits available' in line:
                 credits = int(line.split(':')[-1].strip())
                 return {'query_credits': credits}
-        raise Exception("未找到 Query credits available")
-    except Exception as e:
-        print(f"[shodan CLI info error]: {e}")
+    except Exception:
         return None
+    return None
 
 def shodan_info_http(api_key):
     url = "https://api.shodan.io/api-info"
@@ -75,19 +76,27 @@ def check_api_key_with_count(api_key):
     return False
 
 def get_api_key_and_mode(apikey_arg=None):
+    """
+    決定使用 CLI 模式或 HTTP API 模式
+    1. 先測試 shodan info 是否可用
+    2. 若 CLI 模式不可用 → 請使用者輸入 API key 並用 count 測試
+    """
+    # 先試 CLI 模式
     cli_info = shodan_info_cli()
-    if cli_info is not None:
-        from pathlib import Path
-        keyfile = Path.home() / ".shodan" / "api_key"
-        if keyfile.exists():
-            api_key = keyfile.read_text().strip()
-        else:
-            api_key = None
-        return api_key, False
+    if cli_info and cli_info.get("query_credits", 0) >= 0:
+        print(f"[INFO] Shodan CLI 可用，剩餘 Query credits: {cli_info['query_credits']}")
+        return None, False  # CLI 模式
 
-    key_to_test = apikey_arg or input("請輸入 Shodan API Key（HTTP API 模式）: ").strip()
-    if check_api_key_with_count(key_to_test):
-        return key_to_test, True
+    # CLI 不可用 → 輸入 API key
+    api_key = apikey_arg or input("請輸入 Shodan API Key（HTTP API 模式）: ").strip()
+    if not api_key:
+        print("[錯誤] 未輸入 API Key，無法使用 Shodan")
+        return None, True
+
+    print("[INFO] 測試輸入的 API Key 是否有效 ...")
+    if check_api_key_with_count(api_key):
+        print("[INFO] API Key 驗證成功，使用 HTTP API 模式")
+        return api_key, True
 
     print("[錯誤] API Key 無效或 Shodan 服務異常")
     return None, True
@@ -167,13 +176,14 @@ def main():
     check_conflicts(args)
 
     api_key, use_http_api = get_api_key_and_mode(apikey_arg=args.apikey)
-    if api_key is None:
-        print("[ERROR] 未提供有效 Shodan API Key，無法使用 Shodan 服務。")
-        if args.dns and args.dns.lower() != 'off':
-            domain = dns_detector.normalize_domain(args.dns)
-            log_dir = log_manager.prepare_log_dir(domain=domain)
-            dns_detector.print_dns_report(domain, log_to=log_dir)
-        sys.exit(1)
+
+    if use_http_api:
+        if not api_key:
+            print("[ERROR] 未提供有效 Shodan API Key，無法使用 Shodan 服務。")
+            sys.exit(1)
+    else:
+        # CLI 模式，不需 api_key，直接通過
+        pass
 
     if args.report:
         print("[REPORT] 查詢報告模式，目前未實作")
@@ -218,9 +228,9 @@ def main():
                     print("[錯誤] 檔案不存在，請重新輸入。")
                     continue
                 try:
+                    from src.favicon_handler import get_favicon_bytes_from_file
                     import base64, mmh3
-                    with open(icon_path, "rb") as f:
-                        icon_bytes = f.read()
+                    icon_bytes = get_favicon_bytes_from_file(icon_path)
                     if icon_bytes:
                         b64 = base64.encodebytes(icon_bytes).decode('utf-8')
                         hashval = mmh3.hash(b64)
@@ -228,8 +238,6 @@ def main():
                         log_manager.write_features_log(log_dir, features)
                         print(f"[Hash] 已補充本地 icon hash: {hashval}")
                         break
-                    else:
-                        print("[錯誤] 讀取 icon 檔案失敗。")
                 except Exception as e:
                     print(f"[錯誤] 讀取 icon 檔失敗：{e}")
                     continue
@@ -297,19 +305,14 @@ def main():
 
     elif args.f:
         icon_path = args.f
+        from src.favicon_handler import get_favicon_bytes_from_file
         import base64, mmh3
-        try:
-            with open(icon_path, "rb") as f:
-                icon_bytes = f.read()
-            if not icon_bytes:
-                print("[錯誤] 讀取 icon 檔案失敗。")
-                sys.exit(1)
-            b64 = base64.encodebytes(icon_bytes).decode('utf-8')
-            hashval = mmh3.hash(b64)
-        except Exception as e:
-            print(f"[錯誤] 讀取 icon 檔案失敗：{e}")
+        icon_bytes = get_favicon_bytes_from_file(icon_path)
+        if not icon_bytes:
+            print("[錯誤] 讀取 icon 檔案失敗。")
             sys.exit(1)
-
+        b64 = base64.encodebytes(icon_bytes).decode('utf-8')
+        hashval = mmh3.hash(b64)
         log_dir = log_manager.prepare_log_dir(hashval='fromfile', timestamp=datetime.datetime.now().strftime('%Y%m%d_%H%M%S'))
         features = {
             "favicon_hash": hashval,
