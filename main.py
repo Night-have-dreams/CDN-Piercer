@@ -218,9 +218,9 @@ def main():
                     print("[錯誤] 檔案不存在，請重新輸入。")
                     continue
                 try:
-                    from src.favicon_handler import get_favicon_bytes_from_file
                     import base64, mmh3
-                    icon_bytes = get_favicon_bytes_from_file(icon_path)
+                    with open(icon_path, "rb") as f:
+                        icon_bytes = f.read()
                     if icon_bytes:
                         b64 = base64.encodebytes(icon_bytes).decode('utf-8')
                         hashval = mmh3.hash(b64)
@@ -228,6 +228,8 @@ def main():
                         log_manager.write_features_log(log_dir, features)
                         print(f"[Hash] 已補充本地 icon hash: {hashval}")
                         break
+                    else:
+                        print("[錯誤] 讀取 icon 檔案失敗。")
                 except Exception as e:
                     print(f"[錯誤] 讀取 icon 檔失敗：{e}")
                     continue
@@ -245,7 +247,6 @@ def main():
             query_count_list.append((q, c))
             if not args.batch:
                 print(f"[shodan_count] {q} → {c}")
-            
 
         valid = [(q, c) for q, c in query_count_list if c and c > 0 and c != -1 and c <= 100]
 
@@ -296,14 +297,19 @@ def main():
 
     elif args.f:
         icon_path = args.f
-        from src.favicon_handler import get_favicon_bytes_from_file
         import base64, mmh3
-        icon_bytes = get_favicon_bytes_from_file(icon_path)
-        if not icon_bytes:
-            print("[錯誤] 讀取 icon 檔案失敗。")
+        try:
+            with open(icon_path, "rb") as f:
+                icon_bytes = f.read()
+            if not icon_bytes:
+                print("[錯誤] 讀取 icon 檔案失敗。")
+                sys.exit(1)
+            b64 = base64.encodebytes(icon_bytes).decode('utf-8')
+            hashval = mmh3.hash(b64)
+        except Exception as e:
+            print(f"[錯誤] 讀取 icon 檔案失敗：{e}")
             sys.exit(1)
-        b64 = base64.encodebytes(icon_bytes).decode('utf-8')
-        hashval = mmh3.hash(b64)
+
         log_dir = log_manager.prepare_log_dir(hashval='fromfile', timestamp=datetime.datetime.now().strftime('%Y%m%d_%H%M%S'))
         features = {
             "favicon_hash": hashval,
