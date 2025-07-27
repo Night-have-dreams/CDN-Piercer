@@ -48,24 +48,6 @@ def shodan_info_cli():
         return None
     return None
 
-def shodan_info_http(api_key):
-    url = "https://api.shodan.io/api-info"
-    params = {'key': api_key}
-    try:
-        r = requests.get(url, params=params, timeout=10)
-        r.raise_for_status()
-        data = r.json()
-        return data
-    except requests.exceptions.HTTPError as http_err:
-        if r.status_code == 503:
-            print("[警告] Shodan info 端點暫時無法使用（503 Service Unavailable），請稍後重試。")
-            return None
-        print(f"[錯誤] HTTP 錯誤: {http_err}")
-        return None
-    except Exception as e:
-        print(f"[錯誤] 無法取得 Shodan info：{e}")
-        return None
-
 def check_api_key_with_count(api_key):
     try:
         count = shodan_count_cli.shodan_count_api("apache", api_key)
@@ -81,13 +63,11 @@ def get_api_key_and_mode(apikey_arg=None):
     1. 先測試 shodan info 是否可用
     2. 若 CLI 模式不可用 → 請使用者輸入 API key 並用 count 測試
     """
-    # 先試 CLI 模式
     cli_info = shodan_info_cli()
     if cli_info and cli_info.get("query_credits", 0) >= 0:
         print(f"[INFO] Shodan CLI 可用，剩餘 Query credits: {cli_info['query_credits']}")
         return None, False  # CLI 模式
 
-    # CLI 不可用 → 輸入 API key
     api_key = apikey_arg or input("請輸入 Shodan API Key（HTTP API 模式）: ").strip()
     if not api_key:
         print("[錯誤] 未輸入 API Key，無法使用 Shodan")
@@ -281,7 +261,7 @@ def main():
                 from src.shodan_search_cli import shodan_search_api
                 shodan_result = shodan_search_api(best_query[0], api_key)
             else:
-                shodan_result = shodan_search_cli.shodan_search(
+                shodan_result = shodan_search_cli.shodan_search_cli(
                     best_query[0], log_path=log_dir, batch=args.batch, suspect_ips=suspect_ips
                 )
             log_manager.write_shodan_queries_log(log_dir, query_count_list)
@@ -327,7 +307,7 @@ def main():
                 from src.shodan_search_cli import shodan_search_api
                 shodan_result = shodan_search_api(query, api_key)
             else:
-                shodan_result = shodan_search_cli.shodan_search(query)
+                shodan_result = shodan_search_cli.shodan_search_cli(query)
             log_manager.write_shodan_result_log(log_dir, shodan_result)
             log_manager.write_summary_log(log_dir, {
                 "icon_file": icon_path,
@@ -353,7 +333,7 @@ def main():
                 from src.shodan_search_cli import shodan_search_api
                 shodan_result = shodan_search_api(query, api_key)
             else:
-                shodan_result = shodan_search_cli.shodan_search(query)
+                shodan_result = shodan_search_cli.shodan_search_cli(query)
             log_manager.write_shodan_result_log(log_dir, shodan_result)
             log_manager.write_summary_log(log_dir, {
                 "hash": hashval,
