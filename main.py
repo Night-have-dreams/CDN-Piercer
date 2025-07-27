@@ -245,7 +245,7 @@ def main():
             query_count_list.append((q, c))
             if not args.batch:
                 print(f"[shodan_count] {q} → {c}")
-            time.sleep(0.5)
+            
 
         valid = [(q, c) for q, c in query_count_list if c and c > 0 and c != -1 and c <= 100]
 
