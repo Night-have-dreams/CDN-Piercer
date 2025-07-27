@@ -78,7 +78,7 @@ python main.py -u https://example.com --no-query
 | `-f <icon_file>` | 指定本地 icon 檔案             |
 | `-hash <hash>`   | 直接指定 hash 查詢             |
 | `-dns <domain>`  | 只執行 DNS 查詢               |
-| `-report`        | 歷史報告模式                   |
+| `-report`        | 歷史報告模式(製作中)              |
 | `--no-query`     | 不查 Shodan，只輸出特徵與 hash    |
 | `-q <條件>`        | 附加 Shodan 查詢條件           |
 | `-batch`         | 批次模式，所有流程自動化             |
