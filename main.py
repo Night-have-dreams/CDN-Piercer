@@ -6,7 +6,6 @@ import datetime
 import subprocess
 import requests
 import urllib.parse
-import time
 
 from src import (
     site_crawler,
