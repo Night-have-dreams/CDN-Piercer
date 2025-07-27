@@ -4,29 +4,26 @@
 
 ---
 
-## 安裝依賴
+## 安裝方式
 
-建議先安裝 Python 3.7 以上版本。
-
-安裝套件：
+建議在 Python 3.8+ 環境下，安裝依賴：
 
 ```bash
 pip install -r requirements.txt
 ```
 
-未使用過 Shodan CLI 者，首次使用前需設定 Shodan API KEY（註冊並取得 key，然後）：
+Shodan CLI 需設置 API KEY：
 
 ```bash
-shodan init <YOUR_API_KEY>
+pip install shodan
+shodan init <Your-API-Key>
 ```
 
 ---
 
-## 使用說明
+## 使用方法
 
-主程式為 `main.py`，常見用法如下：
-
-### 1. 使用網址自動查詢（預設開啟 DNS 分析）
+### 1. 基本用法
 
 ```bash
 python main.py -u https://example.com
@@ -72,38 +69,25 @@ python main.py -u https://example.com -q 'port:8080 country:JP'
 python main.py -u https://example.com --no-query
 ```
 
----
 
-## 參數一覽
+### 常用參數
 
-- `-u <URL>`：目標網址，自動下載 favicon 並分析
-- `-f <ICON_FILE>`：本機 favicon 檔案
-- `-hash <HASH>`：直接查詢指定 hash
-- `-dns <DOMAIN|off>`：僅做 DNS 查詢或關閉 DNS
-- `-q <SHODAN_Q>`：加上自訂 shodan 查詢語句
-- `--no-query`：只算 hash 不查 Shodan
-- `-report`：報告模式 (還沒做好)
-- `-batch`：批次模式，自動化流程
-
----
-
-## 查詢結果/日誌
-
-- 每次查詢結果會自動寫入 logs 目錄（包含 DNS 結果、favicon、hash、Shodan 結果等）。
-
----
-
-## 常見問題
-
-- **Q: shodan CLI 未安裝或找不到？**
-  - A: 確認有在 requirements.txt 裡安裝 shodan，並檢查環境變數或重新安裝。
-- **Q: API KEY 無效或未設定？**
-  - A: 執行 `shodan init <YOUR_API_KEY>`，並確認填入的 key 正確。
+| 參數               | 功能說明                     |
+| ---------------- | ------------------------ |
+| `-u <url>`       | 分析指定網址                   |
+| `-f <icon_file>` | 指定本地 icon 檔案             |
+| `-hash <hash>`   | 直接指定 hash 查詢             |
+| `-dns <domain>`  | 只執行 DNS 查詢               |
+| `-report`        | 歷史報告模式                   |
+| `--no-query`     | 不查 Shodan，只輸出特徵與 hash    |
+| `-q <條件>`        | 附加 Shodan 查詢條件           |
+| `-batch`         | 批次模式，所有流程自動化             |
+| `--apikey <KEY>` | 直接指定 Shodan HTTP API Key |
 
 ---
 
 ## 注意事項
 
-- 查詢可能消耗 Shodan credits，請自行管理帳號餘額。
-- 適用於安全研究及紅隊合法合規用途，請勿用於未授權滲透。
-
+- log 檔與查詢結果會儲存在 `logs/` 目錄下，請勿將 logs 目錄推送到 git。
+- 推薦先檢查 `requirements.txt` 內依賴項版本，避免與其他安全工具衝突。
+- 使用 Shodan 前請先申請並設定有效的 API Key。
